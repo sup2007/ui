@@ -324,6 +324,29 @@ name: 'toast-example'
 In this example, we use the `AppConfig` to configure the `expand` prop of the `Toaster` component globally.
 ::
 
+
+### With callback
+
+Pass an `onUpdateOpen` field to execute a callback when the toast is closed (either by expiration or user dismissal).
+
+::component-example
+---
+collapse: true
+name: 'toast-callback-example'
+---
+::
+
+### With HTML content
+
+Use the [`h()` render function](https://vuejs.org/api/render-function.html#h) in the `title` or `description` fields to render HTML elements or Vue components with custom styling.
+
+::component-example
+---
+collapse: true
+name: 'toast-html-example'
+---
+::
+
 ## API
 
 ### Props

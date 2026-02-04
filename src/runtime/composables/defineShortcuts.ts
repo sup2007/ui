@@ -70,13 +70,13 @@ function convertKeyToCode(key: string): string {
   return specialKeys[key.toLowerCase()] || key
 }
 
-export function extractShortcuts(items: any[] | any[][]) {
+export function extractShortcuts(items: any[] | any[][], separator: '_' | '-' = '_') {
   const shortcuts: Record<string, Handler> = {}
 
   function traverse(items: any[]) {
     items.forEach((item) => {
       if (item.kbds?.length && (item.onSelect || item.onClick)) {
-        const shortcutKey = item.kbds.join('_')
+        const shortcutKey = item.kbds.join(separator)
         shortcuts[shortcutKey] = item.onSelect || item.onClick
       }
       if (item.children) {
@@ -158,7 +158,8 @@ export function defineShortcuts(config: MaybeRef<ShortcutsConfig>, options: Shor
       }
       // shift modifier is only checked in combination with alphabet keys and some extra keys
       // (shift with special characters would change the key)
-      if ((alphabetKey || shiftableKey) && e.shiftKey !== shortcut.shiftKey) {
+      // also check shift if the shortcut explicitly requires it or if shift is pressed
+      if ((alphabetKey || shiftableKey || shortcut.shiftKey || e.shiftKey) && e.shiftKey !== shortcut.shiftKey) {
         continue
       }
 
