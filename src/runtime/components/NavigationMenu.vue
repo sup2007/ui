@@ -1,6 +1,7 @@
 <!-- eslint-disable vue/block-tag-newline -->
 <script lang="ts">
 import type { NavigationMenuRootProps, NavigationMenuContentProps, NavigationMenuContentEmits, AccordionRootProps } from 'reka-ui'
+import type { VNode } from 'vue'
 import type { AppConfig } from '@nuxt/schema'
 import theme from '#build/ui/navigation-menu'
 import type { AvatarProps, BadgeProps, ChipProps, IconProps, LinkProps, PopoverProps, TooltipProps } from '../types'
@@ -57,7 +58,7 @@ export interface NavigationMenuItem extends Omit<LinkProps, 'type' | 'raw' | 'cu
   slot?: string
   /**
    * The value of the item. Avoid using `index` as the value to prevent conflicts in horizontal orientation with Reka UI.
-   * @defaultValue `item-${index}`
+   * @defaultValue `item-${index}`, `item-${level}-${index}` for nested children, or `group-${listIndex}-item-${index}` when using grouped items
    */
   value?: string
   children?: NavigationMenuChildItem[]
@@ -204,22 +205,22 @@ export type NavigationMenuEmits<
   'update:modelValue': [value: NavigationMenuModelValue<K, O> | undefined]
 }
 
-type SlotProps<T extends NavigationMenuItem> = (props: { item: T, index: number, active?: boolean, ui: NavigationMenu['ui'] }) => any
+type SlotProps<T extends NavigationMenuItem> = (props: { item: T, index: number, active: boolean, ui: NavigationMenu['ui'] }) => VNode[]
 
 export type NavigationMenuSlots<
   A extends ArrayOrNested<NavigationMenuItem> = ArrayOrNested<NavigationMenuItem>,
   T extends NestedItem<A> = NestedItem<A>
 > = {
-  'item': SlotProps<T>
-  'item-leading': SlotProps<T>
-  'item-label': (props: { item: T, index: number, active?: boolean }) => any
-  'item-trailing': SlotProps<T>
-  'item-content': SlotProps<T> & { close?: () => void }
-  'list-leading': (props?: {}) => any
-  'list-trailing': (props?: {}) => any
+  'item'?: SlotProps<T>
+  'item-leading'?: SlotProps<T>
+  'item-label'?: (props: { item: T, index: number, active: boolean }) => VNode[]
+  'item-trailing'?: SlotProps<T>
+  'item-content'?: (props: { item: T, index: number, active: boolean, ui: NavigationMenu['ui'], close: (() => void) | undefined }) => VNode[]
+  'list-leading'?: (props?: {}) => VNode[]
+  'list-trailing'?: (props?: {}) => VNode[]
 }
-& DynamicSlots<MergeTypes<T>, 'label', { index: number, active?: boolean, ui: NavigationMenu['ui'] }>
-& DynamicSlots<MergeTypes<T>, 'leading' | 'trailing' | 'content', { index: number, active?: boolean, ui: NavigationMenu['ui'] }>
+& DynamicSlots<MergeTypes<T>, 'label', { index: number, active: boolean, ui: NavigationMenu['ui'] }>
+& DynamicSlots<MergeTypes<T>, 'leading' | 'trailing' | 'content', { index: number, active: boolean, ui: NavigationMenu['ui'] }>
 
 </script>
 
@@ -277,11 +278,12 @@ const tooltipProps = toRef(() => defu(typeof props.tooltip === 'boolean' ? {} : 
 const popoverProps = toRef(() => defu(typeof props.popover === 'boolean' ? {} : props.popover, { mode: 'hover', content: { side: 'right', align: 'start', alignOffset: 2 } }) as PopoverProps)
 
 const [DefineLinkTemplate, ReuseLinkTemplate] = createReusableTemplate<{ item: NavigationMenuItem, index: number, active?: boolean }>()
-const [DefineItemTemplate, ReuseItemTemplate] = createReusableTemplate<{ item: NavigationMenuItem, index: number, level?: number }>({
+const [DefineItemTemplate, ReuseItemTemplate] = createReusableTemplate<{ item: NavigationMenuItem, index: number, level?: number, listIndex?: number }>({
   props: {
     item: Object,
     index: Number,
-    level: Number
+    level: Number,
+    listIndex: Number
   }
 })
 
@@ -303,15 +305,33 @@ const lists = computed<NavigationMenuItem[][]>(() =>
     : []
 )
 
-function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
+function getItemValue(item: NavigationMenuItem, index: number, level: number, listIndex: number) {
+  const prefix = lists.value.length > 1 ? `group-${listIndex}-` : ''
+  return get(item, props.valueKey as string) ?? (level > 0 ? `${prefix}item-${level}-${index}` : `${prefix}item-${index}`)
+}
+
+function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0, listIndex = 0) {
   const indexes = list.reduce((acc: string[], item, index) => {
     if (item.defaultOpen || item.open) {
-      acc.push(get(item, props.valueKey as string) ?? (level > 0 ? `item-${level}-${index}` : `item-${index}`))
+      acc.push(getItemValue(item, index, level, listIndex))
     }
     return acc
   }, [])
 
   return props.type === 'single' ? indexes[0] : indexes
+}
+
+function onLinkTrailingClick(e: Event, item: NavigationMenuItem) {
+  if (!item.children?.length) {
+    return
+  }
+
+  if (props.orientation === 'horizontal') {
+    e.preventDefault()
+  } else if (props.orientation === 'vertical' && !props.collapsed) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
 }
 </script>
 
@@ -347,10 +367,10 @@ function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
       <component
         :is="orientation === 'vertical' && item.children?.length && !collapsed ? AccordionTrigger : 'span'"
         v-if="(item.badge || item.badge === 0) || (orientation === 'horizontal' && (item.children?.length || !!slots[(item.slot ? `${item.slot}-content` : 'item-content') as keyof NavigationMenuSlots<T>])) || (orientation === 'vertical' && item.children?.length) || item.trailingIcon || !!slots[(item.slot ? `${item.slot}-trailing` : 'item-trailing') as keyof NavigationMenuSlots<T>]"
-        as="span"
+        :as="orientation === 'vertical' && item.children?.length && !collapsed ? 'span' : undefined"
         data-slot="linkTrailing"
         :class="ui.linkTrailing({ class: [uiProp?.linkTrailing, item.ui?.linkTrailing] })"
-        @click.stop.prevent
+        @click="(e: Event) => onLinkTrailingClick(e, item)"
       >
         <slot :name="((item.slot ? `${item.slot}-trailing` : 'item-trailing') as keyof NavigationMenuSlots<T>)" :item="item" :active="active" :index="index" :ui="ui">
           <UBadge
@@ -370,11 +390,11 @@ function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
     </slot>
   </DefineLinkTemplate>
 
-  <DefineItemTemplate v-slot="{ item, index, level = 0 }">
+  <DefineItemTemplate v-slot="{ item, index, level = 0, listIndex = 0 }">
     <component
       :is="(orientation === 'vertical' && !collapsed) ? AccordionItem : NavigationMenuItem"
       as="li"
-      :value="get(item, props.valueKey as string) ?? (level > 0 ? `item-${level}-${index}` : `item-${index}`)"
+      :value="getItemValue(item, index, level, listIndex)"
     >
       <div v-if="orientation === 'vertical' && item.type === 'label' && !collapsed" data-slot="label" :class="ui.label({ class: [uiProp?.label, item.ui?.label, item.class] })">
         <ReuseLinkTemplate :item="item" :index="index" />
@@ -466,7 +486,7 @@ function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
         <AccordionRoot
           v-bind="({
             ...accordionProps,
-            defaultValue: getAccordionDefaultValue(item.children, level + 1)
+            defaultValue: getAccordionDefaultValue(item.children, level + 1, listIndex)
           } as AccordionRootProps)"
           as="ul"
           data-slot="childList"
@@ -478,6 +498,7 @@ function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
             :item="childItem"
             :index="childIndex"
             :level="level + 1"
+            :list-index="listIndex"
             data-slot="childItem"
             :class="ui.childItem({ class: [uiProp?.childItem, childItem.ui?.childItem] })"
           />
@@ -506,7 +527,7 @@ function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
         v-bind="orientation === 'vertical' && !collapsed ? {
           ...accordionProps,
           modelValue,
-          defaultValue: defaultValue ?? getAccordionDefaultValue(list)
+          defaultValue: defaultValue ?? getAccordionDefaultValue(list, 0, listIndex)
         } : {}"
         :is="orientation === 'vertical' ? AccordionRoot : NavigationMenuList"
         as="ul"
@@ -518,6 +539,7 @@ function getAccordionDefaultValue(list: NavigationMenuItem[], level = 0) {
           :key="`list-${listIndex}-${index}`"
           :item="item"
           :index="index"
+          :list-index="listIndex"
           data-slot="item"
           :class="ui.item({ class: [uiProp?.item, item.ui?.item] })"
         />
