@@ -9,23 +9,23 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^3.0.58",
-    "@ai-sdk/gateway": "^3.0.66",
-    "@ai-sdk/vue": "^3.0.116",
-    "@iconify-json/lucide": "^1.2.98",
-    "@iconify-json/simple-icons": "^1.2.74",
+    "@ai-sdk/anthropic": "^3.0.69",
+    "@ai-sdk/gateway": "^3.0.95",
+    "@ai-sdk/vue": "^3.0.158",
+    "@iconify-json/lucide": "^1.2.102",
+    "@iconify-json/simple-icons": "^1.2.78",
     "@internationalized/date": "^3.12.0",
     "@nuxt/content": "^3.12.0",
     "@nuxt/ui": "workspace:*",
-    "@tiptap/extension-emoji": "^3.20.2",
-    "@tiptap/extension-text-align": "^3.20.2",
-    "ai": "^6.0.116",
+    "@tiptap/extension-emoji": "^3.22.3",
+    "@tiptap/extension-text-align": "^3.22.3",
+    "ai": "^6.0.158",
     "nuxt": "^4.4.2",
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.2.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vue-tsc": "^3.2.5"
+    "typescript": "^6.0.2",
+    "vue-tsc": "^3.2.6"
   }
 }

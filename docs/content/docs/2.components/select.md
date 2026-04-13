@@ -165,10 +165,6 @@ props:
 ---
 ::
 
-::tip
-Use the `by` prop to compare objects by a field instead of reference when the `model-value` is an object.
-::
-
 ### Multiple
 
 Use the `multiple` prop to allow multiple selections, the selected items will be separated by a comma in the trigger.
@@ -492,6 +488,7 @@ ignore:
   - items
   - modelValue
   - class
+  - avatar.loading
 external:
   - items
   - modelValue
