@@ -1,6 +1,10 @@
 ---
 description: A selectable list of items with search, virtualization and rich item rendering.
 category: form
+keywords:
+  - option list
+  - picker
+  - selection
 links:
   - label: Listbox
     icon: i-custom-reka-ui
@@ -8,7 +12,6 @@ links:
   - label: GitHub
     icon: i-simple-icons-github
     to: https://github.com/nuxt/ui/blob/v4/src/runtime/components/Listbox.vue
-navigation.badge: Soon
 ---
 
 ## Usage
@@ -437,6 +440,10 @@ props:
 ---
 ::
 
+::note
+When using `label` items as group headings, pass an array of arrays so a label gets filtered out together with its group when searching.
+::
+
 ### With icon in items
 
 You can use the `icon` property to display an [Icon](/docs/components/icon) inside the items.
@@ -570,7 +577,7 @@ props:
 ---
 ::
 
-### Control selected items
+### Control selected item(s)
 
 You can control the selected item by using the `default-value` prop or the `v-model` directive.
 

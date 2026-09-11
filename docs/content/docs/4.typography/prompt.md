@@ -1,12 +1,12 @@
 ---
-title: Prompt
+title: ProsePrompt
 description: 'Display pre-built AI prompts with one-click copy and IDE integration.'
 category: components
+navigation.title: Prompt
 links:
   - label: GitHub
     icon: i-simple-icons-github
     to: https://github.com/nuxt/ui/blob/v4/src/runtime/components/prose/Prompt.vue
-navigation.badge: Soon
 ---
 
 ## Usage
@@ -62,7 +62,7 @@ slots:
 
 ### Actions
 
-Use the `actions` prop to control which buttons are displayed. Defaults to `["copy"]`. Available actions are `copy`, `cursor` and `windsurf`.
+Use the `actions` prop to display additional buttons. The `copy` button is always displayed. The available actions are `cursor`, `windsurf` and `claude`.
 
 ::component-code{slug="prompt" prose}
 ---
@@ -75,9 +75,8 @@ props:
   description: Add a color mode toggle.
   icon: i-lucide-sun-moon
   actions:
-    - copy
     - cursor
-    - windsurf
+    - claude
   class: 'w-full my-0'
 slots:
   default: |

@@ -6,9 +6,9 @@ import type { Struct as SuperstructSchema } from 'superstruct'
 export interface Form<S extends FormSchema> {
   validate<T extends boolean>(opts?: { name?: keyof FormData<S, false> | (keyof FormData<S, false>)[], silent?: boolean, nested?: boolean, transform?: T }): Promise<FormData<S, T> | false>
   clear (path?: keyof FormData<S, false> | string | RegExp): void
-  errors: Ref<FormError[]>
+  errors: Ref<FormErrorWithId[]>
   setErrors (errs: FormError[], name?: keyof FormData<S, false> | string | RegExp): void
-  getErrors (name?: keyof FormData<S, false> | string | RegExp): FormError[]
+  getErrors (name?: keyof FormData<S, false> | string | RegExp): FormErrorWithId[]
   submit (): Promise<void>
   disabled: ComputedRef<boolean>
   dirty: ComputedRef<boolean>
@@ -26,8 +26,7 @@ export type FormSchema<I extends object = object, O extends object = I>
 // Define a utility type to infer the input type based on the schema type
 export type InferInput<Schema> = Schema extends StandardSchemaV1 ? StandardSchemaV1.InferInput<Schema>
   : Schema extends SuperstructSchema<infer I, any> ? I
-    : Schema extends StandardSchemaV1 ? StandardSchemaV1.InferInput<Schema>
-      : never
+    : never
 
 // Define a utility type to infer the output type based on the schema type
 export type InferOutput<Schema> = Schema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<Schema>

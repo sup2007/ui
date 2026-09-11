@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const appConfig = useAppConfig()
+
 const { data: page } = await useAsyncData('blog', () =>
   queryCollection('blog').first()
 )
@@ -18,7 +20,14 @@ useSeoMeta({
   ogDescription: page.value.description
 })
 
-defineOgImageComponent('Docs')
+useCanonical()
+
+if (import.meta.server) {
+  defineOgImage('Docs.takumi', {
+    title: page.value.title,
+    description: page.value.description
+  })
+}
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -84,7 +93,7 @@ function formatDate(date: string) {
                 </UAvatarGroup>
 
                 <UIcon
-                  name="i-lucide-chevron-right"
+                  :name="appConfig.ui.icons.chevronRight"
                   class="size-4 text-muted group-hover:text-highlighted transition-colors duration-200 shrink-0"
                 />
               </div>

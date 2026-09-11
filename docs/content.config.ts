@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { defineCollection } from '@nuxt/content'
+import { defineSitemapSchema } from '@nuxtjs/sitemap/content'
 
 const Image = z.object({
   src: z.string(),
@@ -50,10 +51,15 @@ const PageSection = z.object({
   features: z.array(PageFeature).optional()
 })
 
+// `@nuxtjs/sitemap` only walks a collection whose schema declares this field,
+// and reads its per-page options (`lastmod`, `changefreq`, `priority`) off it.
+const sitemap = defineSitemapSchema({ z })
+
 const Page = z.object({
   title: z.string(),
   description: z.string(),
-  hero: PageHero
+  hero: PageHero,
+  sitemap
 })
 
 export const collections = {
@@ -84,14 +90,16 @@ export const collections = {
       include: 'docs/**/*'
     }],
     schema: z.object({
-      category: z.enum(['layout', 'form', 'element', 'navigation', 'data', 'overlay', 'dashboard', 'page', 'chat', 'editor', 'color-mode', 'i18n']).optional(),
+      category: z.enum(['layout', 'form', 'element', 'navigation', 'data', 'overlay', 'dashboard', 'page', 'chat', 'content', 'editor', 'color-mode', 'i18n']).optional(),
+      keywords: z.array(z.string()).optional(),
       index: z.boolean().optional(),
       framework: z.enum(['nuxt', 'vue']).optional(),
       navigation: z.object({
         title: z.string().optional(),
         badge: z.string().optional()
       }),
-      links: z.array(Button)
+      links: z.array(Button),
+      sitemap
     })
   }),
   figma: defineCollection({
@@ -149,7 +157,10 @@ export const collections = {
         url: z.string(),
         screenshotUrl: z.string().optional(),
         screenshotOptions: z.object({
-          delay: z.number()
+          delay: z.number().optional(),
+          width: z.number().optional(),
+          cookies: z.array(z.string()).optional(),
+          removeElements: z.array(z.string()).optional()
         }).optional()
       }))
     })
@@ -209,7 +220,8 @@ export const collections = {
         name: z.string(),
         avatar: Avatar.optional(),
         to: z.string().optional()
-      })).optional()
+      })).optional(),
+      sitemap
     })
   }),
   releases: defineCollection({

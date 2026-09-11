@@ -5,12 +5,22 @@ hero:
   title: Showcase
   description: Discover our selection of projects built with Nuxt UI.
 items:
+  - name: Ace
+    url: https://acecompany.nl/
+  - name: Brusnika.LMS
+    url: https://brusnika-lms.com/
+    screenshotOptions:
+      cookies: ['cookie-consent=accepted']
+  - name: Codemo
+    url: https://codemo.dev/
   - name: CodeSnap
     url: https://codesnap.dev/
+  - name: Croix-Rouge française - Devenir bénévole
+    url: https://benevolat.croix-rouge.fr/
+    screenshotOptions:
+      cookies: ['OptanonAlertBoxClosed=2026-05-26T13:44:13.050Z;OptanonConsent=isGpcEnabled=0;']
   - name: DefenceMore
     url: https://defencemore.com/
-  - name: Details
-    url: https://details.team/
   - name: Directus Docs
     url: https://docs.directus.io/
   - name: Eleven Spectacles
@@ -25,6 +35,12 @@ items:
     url: https://www.juno.one/
   - name: Kassebil
     url: https://kassebil.dk/
+  - name: Kleine Zeitung
+    url: https://www.kleinezeitung.at/
+    screenshotOptions:
+      width: 1024
+      delay: 5
+      removeElements: ['[id^="piano"]']
   - name: LearnVue
     url: https://learnvue.co/
   - name: LunixPOS
@@ -33,16 +49,14 @@ items:
     url: https://mawrble.com/
   - name: Meet Sponsors
     url: https://meetsponsors.com/
-  - name: NuxtStart
-    url: https://www.nuxtstart.com/
   - name: Ovatu
     url: https://ovatu.com/
   - name: Pallyy
     url: https://pallyy.com/
-  - name: Passionate People
-    url: https://passionatepeople.io/
   - name: Pingschools
     url: https://pingschools.com/
+  - name: Pitchwall
+    url: https://pitchwall.co/
   - name: Readyy
     url: https://readyy.app/
   - name: RevX
@@ -61,10 +75,18 @@ items:
     url: https://www.thecompaniesapi.com/
   - name: Thuprai
     url: https://thuprai.com/
+  - name: TickServ
+    url: https://tickserv.com/
   - name: TresJS
     url: https://tresjs.org/
+  - name: Triad Trainer
+    url: https://triadtrainer.vercel.app/
   - name: Uneed
     url: https://uneed.best/
+  - name: Volta
+    url: https://volta.net/
+  - name: whichcoding.tools
+    url: https://whichcoding.tools/
   - name: Wiredash
     url: https://wiredash.com/
   - name: Zielgestalt

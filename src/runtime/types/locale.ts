@@ -45,6 +45,7 @@ export type Messages = {
   contentSearch: {
     description?: string
     links: string
+    search: string
     theme: string
     title?: string
   }
@@ -77,6 +78,9 @@ export type Messages = {
   dashboardSidebarToggle: {
     close: string
     open: string
+  }
+  drawer: {
+    close: string
   }
   error: {
     clear: string

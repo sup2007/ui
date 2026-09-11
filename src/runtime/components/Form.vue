@@ -32,10 +32,10 @@ export type FormProps<S extends FormSchema, T extends boolean = true, N extends 
   disabled?: boolean
 
   /**
-   * Path of the form's state within it's parent form.
-   * Used for nesting forms. Only available if `nested` is true.
+   * The `name` attribute of the form element.
+   * For nested forms (`nested` is true), this is also used as the path of the form's state within its parent form.
    */
-  name?: N extends true ? string : never
+  name?: string
 
   /**
    * Delay in milliseconds before validating the form on input events.
@@ -62,7 +62,7 @@ export type FormProps<S extends FormSchema, T extends boolean = true, N extends 
   loadingAuto?: boolean
   class?: any
   ui?: { base?: any }
-  onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void | Promise<void>) | (() => void | Promise<void>)
+  onSubmit?: ((event: FormSubmitEvent<FormData<S, T>>) => void) | (() => void)
 } & /** @vue-ignore */ Omit<FormHTMLAttributes, 'name'>
 
 export interface FormEmits<S extends FormSchema, T extends boolean = true> {
@@ -71,7 +71,7 @@ export interface FormEmits<S extends FormSchema, T extends boolean = true> {
 }
 
 export interface FormSlots {
-  default?(props: { errors: FormError[], loading: boolean }): VNode[]
+  default?(props: { errors: FormErrorWithId[], loading: boolean }): VNode[]
 }
 </script>
 
@@ -81,14 +81,14 @@ import { useEventBus } from '@vueuse/core'
 import { useAppConfig } from '#imports'
 import { formOptionsInjectionKey, formInputsInjectionKey, formBusInjectionKey, formLoadingInjectionKey, formErrorsInjectionKey, formStateInjectionKey } from '../composables/useFormField'
 import { tv } from '../utils/tv'
-import { useComponentUI } from '../composables/useComponentUI'
+import { useComponentProps } from '../composables/useComponentProps'
 import { validateSchema, getAtPath, setAtPath } from '../utils/form'
 import { FormValidationException } from '../types/form'
 
 type I = InferInput<S>
 type O = InferOutput<S>
 
-const props = withDefaults(defineProps<FormProps<S, T, N>>(), {
+const _props = withDefaults(defineProps<FormProps<S, T, N>>(), {
   validateOn() {
     return ['input', 'blur', 'change'] as FormInputEvents[]
   },
@@ -100,11 +100,12 @@ const props = withDefaults(defineProps<FormProps<S, T, N>>(), {
 const emits = defineEmits<FormEmits<S, T>>()
 defineSlots<FormSlots>()
 
+const props = useComponentProps<FormProps<S, T, N>>('form', _props)
+
 const appConfig = useAppConfig() as FormConfig['AppConfig']
-const uiProp = useComponentUI('form', props)
 
 // eslint-disable-next-line vue/no-dupe-keys
-const ui = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.form || {}) }))
+const ui = computed(() => tv({ extend: theme, ...(appConfig.ui?.form || {}) }))
 
 const formId = props.id ?? useId() as string
 const formRef = useTemplateRef('formRef')
@@ -117,6 +118,7 @@ const parentBus = props.nested === true && inject(
 )
 
 const parentState = props.nested === true ? inject(formStateInjectionKey, undefined) : undefined
+// eslint-disable-next-line vue/no-dupe-keys
 const state = computed(() => {
   if (parentState?.value) {
     return props.name ? getAtPath(parentState.value, props.name) : parentState.value
@@ -265,7 +267,7 @@ const loading = ref(false)
 provide(formLoadingInjectionKey, readonly(loading))
 
 async function onSubmitWrapper(payload: Event) {
-  loading.value = props.loadingAuto && true
+  loading.value = !!props.loadingAuto
 
   const event = payload as FormSubmitEvent<FormData<S, T>>
 
@@ -288,6 +290,7 @@ async function onSubmitWrapper(payload: Event) {
   }
 }
 
+// eslint-disable-next-line vue/no-dupe-keys
 const disabled = computed(() => props.disabled || loading.value)
 
 provide(formOptionsInjectionKey, computed(() => ({
@@ -436,7 +439,9 @@ const api = {
     // Clear from nested forms and collect remaining errors
     const nestedErrors: FormError[] = []
     for (const form of nestedForms.value.values()) {
-      if (matchesTarget(name, form.name)) form.api.clear()
+      // A RegExp is written against the parent's prefixed names, so it cannot be
+      // re-tested inside the nested form and clears it whole.
+      if (matchesTarget(name, form.name)) form.api.clear(name instanceof RegExp ? undefined : getNestedTarget(name, form.name || ''))
       nestedErrors.push(...getFormErrors(form as any))
     }
 
@@ -459,7 +464,9 @@ defineExpose(api)
     :is="parentBus ? 'div' : 'form'"
     :id="formId"
     ref="formRef"
-    :class="ui({ class: [uiProp?.base, props.class] })"
+    :name="parentBus ? undefined : props.name"
+    :method="parentBus ? undefined : 'post'"
+    :class="ui({ class: [props.ui?.base, props.class] })"
     @submit.prevent="onSubmitWrapper"
   >
     <slot :errors="errors" :loading="loading" />

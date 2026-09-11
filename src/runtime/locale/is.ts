@@ -1,8 +1,8 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
-  name: 'Icelandic',
+  name: 'Íslenska',
   code: 'is',
   messages: {
     alert: {
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Tenglar',
+      search: 'Niðurstöður',
       theme: 'Þema'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Loka hliðarstiku',
       open: 'Opna hliðarstiku'
+    },
+    drawer: {
+      close: 'Loka'
     },
     error: {
       clear: 'Til baka heim'

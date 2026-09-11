@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -24,7 +24,7 @@ export default defineLocale<Messages>({
     },
     carousel: {
       dots: 'Wielt Dia fir ze weisen',
-      goto: 'Gitt op d\'Slide {Slide}',
+      goto: 'Gitt op d\'Slide {slide}',
       next: 'Näch.',
       prev: 'Präz.'
     },
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Linken',
+      search: 'Resultater',
       theme: 'Thema'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Sidebar zoumaachen',
       open: 'Sidebar opmaachen'
+    },
+    drawer: {
+      close: 'Zoumaachen'
     },
     error: {
       clear: 'Zréck op d\'Startsäit'

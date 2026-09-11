@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { joinURL } from 'ufo'
 import { kebabCase } from 'scule'
 import type { ContentNavigationItem } from '@nuxt/content'
 
@@ -29,7 +28,20 @@ const navigation = inject<Ref<ContentNavigationItem[]>>('navigation')
 const { findSurround, findBreadcrumb } = useNavigation(navigation!)
 
 const breadcrumb = computed(() => findBreadcrumb(page.value?.path as string))
-const surround = computed(() => findSurround(page.value?.path as string))
+
+// The surround links are framework-specific. Prerendered pages bake in the page's
+// framework (or the `nuxt` default), but `useFrameworks` reads the real cookie on the
+// client, so keep using the prerendered value through hydration to avoid a mismatch,
+// then switch to the actual framework once mounted.
+const hydrated = ref(false)
+onMounted(() => {
+  hydrated.value = true
+})
+
+const surround = computed(() => findSurround(
+  page.value?.path as string,
+  hydrated.value ? framework.value : ((page.value?.framework as string) || 'nuxt')
+))
 
 if (!import.meta.prerender) {
   // Redirect to the correct framework version if the page is not the current framework
@@ -49,82 +61,66 @@ if (!import.meta.prerender) {
 const title = page.value?.seo?.title ? page.value.seo.title : page.value?.navigation?.title ? page.value.navigation.title : page.value?.title
 const prefix = page.value?.path.includes('components/') || page.value?.path.includes('composables/') ? 'Vue ' : ''
 const suffix = page.value?.path.includes('components/') ? 'Component ' : page.value?.path.includes('composables/') ? 'Composable ' : ''
+// A `Vue X Component` title already says Vue, so only tag the framework on pages without that prefix
+const frameworkSuffix = !prefix && page.value?.framework === 'vue' ? ' for Vue' : ''
 const description = page.value?.seo?.description ? page.value.seo.description : page.value?.description
 
 useSeoMeta({
-  titleTemplate: `${prefix}%s ${suffix}- Nuxt UI ${page.value?.framework === 'vue' ? ' for Vue' : ''}`,
+  titleTemplate: `${prefix}%s ${suffix}- Nuxt UI${frameworkSuffix}`,
   title,
-  ogTitle: `${prefix}${title} ${suffix}- Nuxt UI ${page.value?.framework === 'vue' ? ' for Vue' : ''}`,
+  ogTitle: `${prefix}${title} ${suffix}- Nuxt UI${frameworkSuffix}`,
   description,
   ogDescription: description
 })
 
-if (route.path.startsWith('/docs/components/')) {
-  defineOgImageComponent('OgImageComponent', {
-    title: page.value.title,
-    description: page.value.description,
-    component: (route.params.slug as string[]).pop() as string
-  })
-} else {
-  defineOgImageComponent('Docs', {
-    title: page.value.title,
-    description: page.value.description,
-    headline: breadcrumb.value?.[breadcrumb.value.length - 1]?.label || 'Nuxt UI',
-    framework: page.value?.framework
-  })
-}
-
-// Pre-render the markdown path + add it to alternate links
-const site = useSiteConfig()
 const path = computed(() => route.path.replace(/\/$/, ''))
-prerenderRoutes([joinURL('/raw', `${path.value}.md`)])
-useHead({
-  link: [
-    {
-      rel: 'alternate',
-      href: `${site.url}${path.value}.md`,
-      type: 'text/markdown'
-    }
-  ],
-  script: [{
-    type: 'application/ld+json',
-    innerHTML: JSON.stringify({
-      '@context': 'https://schema.org',
+
+if (import.meta.server) {
+  if (route.path.startsWith('/docs/components/')) {
+    defineOgImage('Component.takumi', {
+      title: page.value.title,
+      description: page.value.description,
+      slug: (route.params.slug as string[]).pop() as string
+    })
+  } else {
+    defineOgImage('Docs.takumi', {
+      title: page.value.title,
+      description: page.value.description,
+      headline: breadcrumb.value?.[breadcrumb.value.length - 1]?.label || 'Nuxt UI',
+      framework: page.value?.framework
+    })
+  }
+
+  useSchemaOrg([
+    defineArticle({
       '@type': 'TechArticle',
       'headline': `${prefix}${title} ${suffix}`.trim(),
-      'description': description,
-      'url': joinURL(site.url, path.value),
-      'breadcrumb': {
-        '@type': 'BreadcrumbList',
-        'itemListElement': breadcrumb.value?.map((item, index) => ({
-          '@type': 'ListItem',
-          'position': index + 1,
-          'name': item.label,
-          'item': item.to ? joinURL(site.url, String(item.to)) : undefined
-        })) || []
-      }
-    }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')
-  }]
-})
+      'description': description
+    }),
+    defineBreadcrumb({
+      itemListElement: breadcrumb.value?.map(item => ({
+        name: item.label,
+        item: item.to ? String(item.to) : undefined
+      })) || []
+    })
+  ])
+}
 
-const { open, messages } = useChat()
+useCanonical(computed(() => `${path.value}.md`))
+
+const { open, ask } = useChat()
+// same glyph as the studio's Ask-AI trigger, and skins with the icon pack
+const studioIcons = useStudioIcons()
 
 const links = computed(() => [{
-  icon: 'i-lucide-file-pen',
+  icon: studioIcons.pencil,
   label: 'Edit this page',
   to: `https://github.com/nuxt/ui/edit/v4/docs/content/${page?.value?.stem}.md`,
   target: '_blank'
 }, {
-  icon: 'i-lucide-bot-message-square',
+  icon: studioIcons.assistant,
   label: 'Explain with AI',
-  onClick: () => {
-    messages.value = [...messages.value, {
-      id: String(Date.now()),
-      role: 'user',
-      parts: [{ type: 'text', text: 'Read this documentation page and summarize it. I want to ask questions about it.' }]
-    }]
-    open.value = true
-  }
+  onClick: () => ask('Read this documentation page and summarize it. I want to ask questions about it.')
 }])
 </script>
 
@@ -183,7 +179,7 @@ const links = computed(() => [{
     </UPageBody>
 
     <template v-if="page?.body?.toc?.links?.length" #right>
-      <UContentToc :links="page.body.toc.links" class="z-2">
+      <UContentToc :links="page.body.toc.links" class="z-2" highlight highlight-variant="circuit">
         <template #bottom>
           <USeparator v-if="page.body?.toc?.links?.length" type="dashed" />
 

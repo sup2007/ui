@@ -9,6 +9,19 @@ if (!page.value) {
 const { url } = useSiteConfig()
 const appConfig = useAppConfig()
 
+if (import.meta.server) {
+  useSchemaOrg([
+    defineSoftwareApp({
+      name: 'Nuxt UI',
+      operatingSystem: 'Web',
+      applicationCategory: 'DeveloperApplication',
+      offers: { price: 0, priceCurrency: 'USD' }
+    })
+  ])
+}
+
+useCanonical('/raw/index.md')
+
 useSeoMeta({
   titleTemplate: '%s - Nuxt UI',
   title: page.value.title,
@@ -90,7 +103,7 @@ useIntersectionObserver(contributorsRef, ([entry]) => {
           :overlay="false"
           :ui="{
             root: '[--gap:--spacing(4)] [--duration:40s] border-default absolute w-full left-0 border-y lg:border-x lg:border-y-0 lg:w-[calc(50%-6px)] 2xl:max-w-[320px] lg:flex-col',
-            content: 'lg:w-auto lg:flex-col lg:animate-[marquee-vertical_var(--duration)_linear_infinite] lg:rtl:animate-[marquee-vertical-rtl_var(--duration)_linear_infinite] lg:h-fit'
+            content: 'lg:w-auto lg:flex-col lg:animate-[marquee-vertical_var(--duration)_linear_infinite] lg:h-fit'
           }"
         >
           <ULink
@@ -107,7 +120,7 @@ useIntersectionObserver(contributorsRef, ([entry]) => {
               width="290"
               height="163"
               format="webp"
-              class="hover:scale-105 lg:hover:scale-110 transition-transform aspect-video w-full border-x lg:border-x-0 lg:border-y border-default 2xl:border-y-0"
+              class="hover:scale-105 lg:hover:scale-110 transition-transform aspect-video w-full border-x lg:border-x-0 lg:border-y border-default 2xl:border-y-0 bg-muted"
               loading="lazy"
             />
             <UBadge color="neutral" variant="outline" size="md" :label="component.title" class="hidden lg:block absolute mx-auto top-4 left-6 xl:left-4 group-hover/link:opacity-100 opacity-0 transition-all duration-300 pointer-events-none -translate-y-2 group-hover/link:translate-y-0" />
@@ -120,7 +133,7 @@ useIntersectionObserver(contributorsRef, ([entry]) => {
           :overlay="false"
           :ui="{
             root: '[--gap:--spacing(4)] [--duration:40s] border-default absolute w-full mt-[180px] left-0 border-y lg:mt-auto lg:left-auto lg:border-y-0 lg:border-x lg:w-[calc(50%-6px)] 2xl:max-w-[320px] lg:right-0 lg:flex-col',
-            content: 'lg:w-auto lg:flex-col lg:animate-[marquee-vertical_var(--duration)_linear_infinite] lg:rtl:animate-[marquee-vertical-rtl_var(--duration)_linear_infinite] lg:h-fit lg:[animation-direction:reverse]'
+            content: 'lg:w-auto lg:flex-col lg:animate-[marquee-vertical_var(--duration)_linear_infinite] lg:h-fit lg:[animation-direction:reverse]'
           }"
         >
           <ULink
@@ -137,7 +150,7 @@ useIntersectionObserver(contributorsRef, ([entry]) => {
               width="290"
               height="163"
               format="webp"
-              class="hover:scale-105 lg:hover:scale-110 transition-transform aspect-video w-full border-x lg:border-x-0 lg:border-y border-default 2xl:border-y-0"
+              class="hover:scale-105 lg:hover:scale-110 transition-transform aspect-video w-full border-x lg:border-x-0 lg:border-y border-default 2xl:border-y-0 bg-muted"
               loading="lazy"
             />
             <UBadge color="neutral" variant="outline" size="md" :label="component.title" class="hidden lg:block absolute mx-auto top-4 left-6 xl:left-4 group-hover/link:opacity-100 opacity-0 transition-all duration-300 pointer-events-none -translate-y-2 group-hover/link:translate-y-0" />
@@ -149,6 +162,10 @@ useIntersectionObserver(contributorsRef, ([entry]) => {
     <USeparator />
 
     <UPageSection :ui="{ container: 'lg:py-16' }" class="bg-elevated/25">
+      <h2 class="sr-only">
+        Features
+      </h2>
+
       <ul class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 xl:gap-y-10">
         <Motion
           v-for="(feature, index) in page?.features"
@@ -178,10 +195,10 @@ useIntersectionObserver(contributorsRef, ([entry]) => {
             <UIcon :name="feature.icon" class="size-5 shrink-0" />
           </div>
           <div class="flex flex-col">
-            <h2 class="font-medium text-highlighted inline-flex items-center gap-x-1">
+            <h3 class="font-medium text-highlighted inline-flex items-center gap-x-1">
               {{ feature.title }}
               <UIcon v-if="feature.to" :name="appConfig.ui.icons.arrowRight" class="size-4 shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-1 group-hover:translate-x-0" />
-            </h2>
+            </h3>
             <p class="text-sm text-muted">
               {{ feature.description }}
             </p>

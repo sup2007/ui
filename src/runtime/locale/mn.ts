@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Холбоосууд',
+      search: 'Үр дүн',
       theme: 'Загвар'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Хажуугийн самбарыг хаах',
       open: 'Хажуугийн самбарыг нээх'
+    },
+    drawer: {
+      close: 'Хаах'
     },
     error: {
       clear: 'Нүүр хуудас руу буцах'

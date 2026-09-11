@@ -15,14 +15,6 @@
   ],
   "packageRules": [
     {
-      "groupName": "tailwindcss",
-      "matchPackageNames": [
-        "tailwindcss",
-        "@tailwindcss/postcss",
-        "@tailwindcss/vite"
-      ]
-    },
-    {
       "groupName": "reka-ui",
       "matchPackageNames": [
         "reka-ui",
@@ -36,20 +28,16 @@
       ]
     },
     {
-      "groupName": "vite",
       "matchPackageNames": [
-        "@vitejs/plugin-vue",
-        "vite",
-        "vue",
-        "vue-router"
-      ]
+        "tailwind-variants"
+      ],
+      "allowedVersions": "<3.3.0"
     },
     {
-      "groupName": "vue-tsc",
       "matchPackageNames": [
-        "vue-tsc",
-        "vue-component-type-helpers"
-      ]
+        "@nuxt/image"
+      ],
+      "allowedVersions": "<2.1.0"
     },
     {
       "matchDepTypes": [

@@ -2,6 +2,11 @@
 title: CommandPalette
 description: A command palette with full-text search powered by Fuse.js for efficient fuzzy matching.
 category: navigation
+keywords:
+  - command menu
+  - cmdk
+  - spotlight
+  - global search
 links:
   - label: Fuse.js
     icon: i-custom-fuse-js
@@ -970,7 +975,7 @@ You can use the `fuse` prop to override the options of [useFuse](https://vueuse.
   fuseOptions: {
     ignoreLocation: true,
     threshold: 0.1,
-    keys: ['label', 'suffix']
+    keys: ['label', 'description', 'suffix']
   },
   resultLimit: 12,
   matchAllWhenSearchEmpty: true
@@ -978,7 +983,7 @@ You can use the `fuse` prop to override the options of [useFuse](https://vueuse.
 ```
 
 ::tip
-The `fuseOptions` are the options of [Fuse.js](https://www.fusejs.io/api/options.html), the `resultLimit` is the maximum number of results to return and the `matchAllWhenSearchEmpty` is a boolean to match all items when the search term is empty.
+The `fuseOptions` are the options of [Fuse.js](https://www.fusejs.io/), the `resultLimit` is the maximum number of results to return and the `matchAllWhenSearchEmpty` is a boolean to match all items when the search term is empty.
 ::
 
 You can for example set `{ fuseOptions: { includeMatches: true } }`{lang="ts-type"} to highlight the search term in the items.

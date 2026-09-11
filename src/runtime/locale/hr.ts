@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Poveznice',
+      search: 'Rezultati',
       theme: 'Tema'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Zatvori bočnu traku',
       open: 'Otvori bočnu traku'
+    },
+    drawer: {
+      close: 'Zatvori'
     },
     error: {
       clear: 'Natrag na početnu'

@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'লিংকসমূহ',
+      search: 'ফলাফল',
       theme: 'থিম'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'সাইডবার বন্ধ করুন',
       open: 'সাইডবার খুলুন'
+    },
+    drawer: {
+      close: 'বন্ধ করুন'
     },
     error: {
       clear: 'হোম পেজে ফিরে যান'

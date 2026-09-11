@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Odkazy',
+      search: 'Výsledky',
       theme: 'Barevný režim'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Zavřít postranní panel',
       open: 'Otevřít postranní panel'
+    },
+    drawer: {
+      close: 'Zavřít'
     },
     error: {
       clear: 'Zpět na úvod'

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import colors from 'tailwindcss/colors'
 import type { NuxtError } from '#app'
 
 const props = defineProps<{
@@ -7,18 +6,36 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
-const appConfig = useAppConfig()
-const colorMode = useColorMode()
-const { style, link } = useTheme()
+const { style, link, color } = useTheme()
 
-const { data: navigation } = await useAsyncData('navigation', () => queryCollectionNavigation('docs', ['framework', 'category', 'description']))
-const { data: files } = useLazyAsyncData('search', () => queryCollectionSearchSections('docs', {
-  ignoredTags: ['style']
-}), {
-  server: false
+// same lazy mount as app.vue: a static mount here would defeat the
+// dynamic import and pull the studio engine back into the entry chunk
+const { open: chatOpen } = useChat()
+const chatSeen = ref(false)
+watch(chatOpen, (value) => {
+  if (value) chatSeen.value = true
+}, { immediate: true })
+
+// ⌘I lives here rather than in Chat.vue: the chat only mounts once it has been
+// opened, so a binding inside it would never exist on the fresh load where the
+// command palette still advertises the shortcut.
+const { open: searchOpen } = useContentSearch()
+
+defineShortcuts({
+  meta_i: {
+    handler: () => {
+      if (searchOpen.value) {
+        searchOpen.value = false
+        chatOpen.value = true
+      } else {
+        chatOpen.value = !chatOpen.value
+      }
+    },
+    usingInput: true
+  }
 })
 
-const color = computed(() => colorMode.value === 'dark' ? (colors as any)[appConfig.ui.colors.neutral][900] : 'white')
+const { data: navigation } = await useFetch('/api/navigation.json')
 
 useHead({
   meta: [
@@ -26,10 +43,7 @@ useHead({
     { key: 'theme-color', name: 'theme-color', content: color }
   ],
   link,
-  style,
-  htmlAttrs: {
-    lang: 'en'
-  }
+  style
 })
 
 useSeoMeta({
@@ -37,10 +51,12 @@ useSeoMeta({
   title: String(props.error.statusCode)
 })
 
-useServerSeoMeta({
-  ogSiteName: 'Nuxt UI',
-  twitterCard: 'summary_large_image'
-})
+if (import.meta.server) {
+  useSeoMeta({
+    ogSiteName: 'Nuxt UI',
+    twitterCard: 'summary_large_image'
+  })
+}
 
 useFaviconFromTheme()
 
@@ -53,17 +69,21 @@ provide('navigation', rootNavigation)
   <UApp>
     <NuxtLoadingIndicator color="var(--ui-primary)" :height="2" />
 
-    <div :class="[route.path.startsWith('/docs/') && 'root']">
-      <!-- <Banner /> -->
+    <div class="flex">
+      <div class="flex-1 min-w-0" :class="[route.path.startsWith('/docs/') && 'root']">
+        <!-- <Banner /> -->
 
-      <Header />
+        <Header />
 
-      <UError :error="error" />
+        <UError :error="error" />
 
-      <Footer />
+        <Footer />
+      </div>
 
       <ClientOnly>
-        <Search :files="files" :navigation="navigationByFramework" />
+        <LazyChat v-if="chatSeen" />
+
+        <Search :navigation="navigationByFramework" />
       </ClientOnly>
     </div>
   </UApp>

@@ -103,7 +103,13 @@ export interface TableProps<T extends TableData = TableData> extends TableOption
    * @see https://tanstack.com/virtual/latest/docs/api/virtualizer#options
    * @defaultValue false
    */
-  virtualize?: boolean | (Partial<Omit<VirtualizerOptions<Element, Element>, 'getScrollElement' | 'count' | 'estimateSize' | 'overscan'>> & {
+  virtualize?: boolean | (Partial<Omit<VirtualizerOptions<Element, Element>, 'count' | 'estimateSize' | 'overscan'>> & {
+    /**
+     * Virtualize against an external scroll element instead of the table's own root.
+     * Pair with `scrollMargin` set to the table's offset from the scroll element's start.
+     * @defaultValue undefined
+     */
+    getScrollElement?: () => Element | null
     /**
      * Number of items rendered outside the visible area
      * @defaultValue 12
@@ -225,20 +231,21 @@ export type TableSlots<T extends TableData = TableData> = {
 
 <script setup lang="ts" generic="T extends TableData">
 import { computed, useTemplateRef, watch, toRef } from 'vue'
-import { Primitive, useForwardProps } from 'reka-ui'
+import { Primitive } from 'reka-ui'
 import { upperFirst } from 'scule'
 import { defu } from 'defu'
 import { FlexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, getExpandedRowModel, useVueTable } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
 import { reactivePick, createReusableTemplate, createRef } from '@vueuse/core'
 import { useAppConfig } from '#imports'
-import { useComponentUI } from '../composables/useComponentUI'
+import { useComponentProps } from '../composables/useComponentProps'
+import { useForwardProps } from '../composables/useForwardProps'
 import { useLocale } from '../composables/useLocale'
 import { tv } from '../utils/tv'
 
 defineOptions({ inheritAttrs: false })
 
-const props = withDefaults(defineProps<TableProps<T>>(), {
+const _props = withDefaults(defineProps<TableProps<T>>(), {
   watchOptions: () => ({
     deep: true
   }),
@@ -246,12 +253,16 @@ const props = withDefaults(defineProps<TableProps<T>>(), {
 })
 const slots = defineSlots<TableSlots<T>>()
 
+const props = useComponentProps<TableProps<T>>('table', _props)
+
 const { t } = useLocale()
 const appConfig = useAppConfig() as Table['AppConfig']
-const uiProp = useComponentUI('table', props)
 
+// eslint-disable-next-line vue/no-dupe-keys
 const data = createRef(props.data ?? [], props.watchOptions?.deep !== false)
+// eslint-disable-next-line vue/no-dupe-keys
 const meta = computed(() => props.meta ?? {})
+// eslint-disable-next-line vue/no-dupe-keys
 const columns = computed<TableColumn<T>[]>(() => processColumns(props.columns ?? Object.keys(data.value[0] ?? {}).map((accessorKey: string) => ({ accessorKey, header: upperFirst(accessorKey) }))))
 
 function processColumns(columns: TableColumn<T>[]): TableColumn<T>[] {
@@ -276,11 +287,16 @@ function processColumns(columns: TableColumn<T>[]): TableColumn<T>[] {
   })
 }
 
-const ui = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.table || {}) })({
+// When an external scroll element is provided, it owns the scroll (the root grows inline).
+const isExternalScroll = computed(() => typeof props.virtualize === 'object' && !!props.virtualize.getScrollElement)
+
+// eslint-disable-next-line vue/no-dupe-keys
+const ui = computed(() => tv({ extend: theme, ...(appConfig.ui?.table || {}) })({
   sticky: props.sticky,
   loading: props.loading,
   loadingColor: props.loadingColor,
-  loadingAnimation: props.loadingAnimation
+  loadingAnimation: props.loadingAnimation,
+  externalScroll: isExternalScroll.value
 }))
 
 const [DefineTableTemplate, ReuseTableTemplate] = createReusableTemplate()
@@ -423,12 +439,19 @@ const virtualizerProps = toRef(() => defu(typeof props.virtualize === 'boolean' 
   overscan: 12
 }))
 
+const getScrollElement = () => (isExternalScroll.value ? virtualizerProps.value.getScrollElement?.() : rootRef.value?.$el) ?? null
+// Offset applied to the spacer rows: `scrollMargin` is the table's offset within the scroll element (0 unless set).
+const scrollMargin = computed(() => virtualizerProps.value.scrollMargin ?? 0)
+
 const virtualizer = !!props.virtualize && useVirtualizer({
   ...virtualizerProps.value,
   get count() {
     return centerRows.value.length
   },
-  getScrollElement: () => rootRef.value?.$el,
+  get scrollMargin() {
+    return scrollMargin.value
+  },
+  getScrollElement,
   estimateSize: (index: number) => {
     const estimate = virtualizerProps.value.estimateSize
     return typeof estimate === 'function' ? estimate(index) : estimate
@@ -437,11 +460,12 @@ const virtualizer = !!props.virtualize && useVirtualizer({
 
 const virtualItems = computed(() => virtualizer ? virtualizer.value.getVirtualItems() : [])
 
-const virtualPaddingTop = computed(() => virtualItems.value[0]?.start ?? 0)
+// `start`/`end` include `scrollMargin`; exclude it from the spacers so the rows sit inline below preceding content.
+const virtualPaddingTop = computed(() => (virtualItems.value[0]?.start ?? 0) - scrollMargin.value)
 
 const virtualPaddingBottom = computed(() => {
   if (!virtualizer || !virtualItems.value.length) return 0
-  return virtualizer.value.getTotalSize() - (virtualItems.value[virtualItems.value.length - 1]?.end ?? 0)
+  return virtualizer.value.getTotalSize() - (virtualItems.value[virtualItems.value.length - 1]?.end ?? 0) + scrollMargin.value
 })
 
 function valueUpdater<T extends Updater<any>>(updaterOrValue: T, ref: Ref) {
@@ -530,7 +554,7 @@ defineExpose({
       data-slot="tr"
       :class="ui.tr({
         class: [
-          uiProp?.tr,
+          props.ui?.tr,
           resolveValue(tableApi.options.meta?.class?.tr, row)
         ]
       })"
@@ -549,7 +573,7 @@ defineExpose({
         data-slot="td"
         :class="ui.td({
           class: [
-            uiProp?.td,
+            props.ui?.td,
             resolveValue(cell.column.columnDef.meta?.class?.td, cell)
           ],
           pinned: !!cell.column.getIsPinned()
@@ -565,23 +589,23 @@ defineExpose({
       </td>
     </tr>
 
-    <tr v-if="row.getIsExpanded()" data-slot="tr" :class="ui.tr({ class: [uiProp?.tr] })">
-      <td :colspan="row.getAllCells().length" data-slot="td" :class="ui.td({ class: [uiProp?.td] })">
+    <tr v-if="row.getIsExpanded()" data-slot="tr" :class="ui.tr({ class: [props.ui?.tr] })">
+      <td :colspan="row.getVisibleCells().length" data-slot="td" :class="ui.td({ class: [props.ui?.td] })">
         <slot name="expanded" :row="row" />
       </td>
     </tr>
   </DefineRowTemplate>
 
   <DefineTableTemplate>
-    <table ref="tableRef" data-slot="base" :class="ui.base({ class: [uiProp?.base] })">
-      <caption v-if="caption || !!slots.caption" data-slot="caption" :class="ui.caption({ class: [uiProp?.caption] })">
+    <table ref="tableRef" data-slot="base" :class="ui.base({ class: [props.ui?.base] })">
+      <caption v-if="props.caption || !!slots.caption" data-slot="caption" :class="ui.caption({ class: [props.ui?.caption] })">
         <slot name="caption">
-          {{ caption }}
+          {{ props.caption }}
         </slot>
       </caption>
 
-      <thead data-slot="thead" :class="ui.thead({ class: [uiProp?.thead] })">
-        <tr v-for="headerGroup in tableApi.getHeaderGroups()" :key="headerGroup.id" data-slot="tr" :class="ui.tr({ class: [uiProp?.tr] })">
+      <thead data-slot="thead" :class="ui.thead({ class: [props.ui?.thead] })">
+        <tr v-for="headerGroup in tableApi.getHeaderGroups()" :key="headerGroup.id" data-slot="tr" :class="ui.tr({ class: [props.ui?.tr] })">
           <th
             v-for="header in headerGroup.headers"
             :key="header.id"
@@ -592,7 +616,7 @@ defineExpose({
             data-slot="th"
             :class="ui.th({
               class: [
-                uiProp?.th,
+                props.ui?.th,
                 resolveValue(header.column.columnDef.meta?.class?.th, header)
               ],
               pinned: !!header.column.getIsPinned()
@@ -608,10 +632,10 @@ defineExpose({
           </th>
         </tr>
 
-        <tr data-slot="separator" :class="ui.separator({ class: [uiProp?.separator] })" />
+        <tr data-slot="separator" :class="ui.separator({ class: [props.ui?.separator] })" />
       </thead>
 
-      <tbody data-slot="tbody" :class="ui.tbody({ class: [uiProp?.tbody] })">
+      <tbody data-slot="tbody" :class="ui.tbody({ class: [props.ui?.tbody] })">
         <slot name="body-top" />
 
         <template v-if="rows.length">
@@ -619,7 +643,7 @@ defineExpose({
 
           <template v-if="virtualizer">
             <tr v-if="virtualPaddingTop > 0" :style="{ height: `${virtualPaddingTop}px` }" aria-hidden="true">
-              <td :colspan="tableApi.getAllLeafColumns().length" />
+              <td :colspan="tableApi.getVisibleLeafColumns().length" />
             </tr>
             <template v-for="virtualRow in virtualItems" :key="centerRows[virtualRow.index]?.id ?? `virtual-${virtualRow.index}`">
               <ReuseRowTemplate
@@ -629,7 +653,7 @@ defineExpose({
               />
             </template>
             <tr v-if="virtualPaddingBottom > 0" :style="{ height: `${virtualPaddingBottom}px` }" aria-hidden="true">
-              <td :colspan="tableApi.getAllLeafColumns().length" />
+              <td :colspan="tableApi.getVisibleLeafColumns().length" />
             </tr>
           </template>
 
@@ -640,16 +664,16 @@ defineExpose({
           <ReuseRowTemplate v-for="row in bottomRows" :key="row.id" :row="row" />
         </template>
 
-        <tr v-else-if="loading && !!slots['loading']">
-          <td :colspan="tableApi.getAllLeafColumns().length" data-slot="loading" :class="ui.loading({ class: uiProp?.loading })">
+        <tr v-else-if="props.loading && !!slots['loading']">
+          <td :colspan="tableApi.getVisibleLeafColumns().length" data-slot="loading" :class="ui.loading({ class: props.ui?.loading })">
             <slot name="loading" />
           </td>
         </tr>
 
         <tr v-else>
-          <td :colspan="tableApi.getAllLeafColumns().length" data-slot="empty" :class="ui.empty({ class: uiProp?.empty })">
+          <td :colspan="tableApi.getVisibleLeafColumns().length" data-slot="empty" :class="ui.empty({ class: props.ui?.empty })">
             <slot name="empty">
-              {{ empty || t('table.noData') }}
+              {{ props.empty || t('table.noData') }}
             </slot>
           </td>
         </tr>
@@ -660,11 +684,11 @@ defineExpose({
       <tfoot
         v-if="hasFooter"
         data-slot="tfoot"
-        :class="ui.tfoot({ class: [uiProp?.tfoot] })"
+        :class="ui.tfoot({ class: [props.ui?.tfoot] })"
       >
-        <tr data-slot="separator" :class="ui.separator({ class: [uiProp?.separator] })" />
+        <tr data-slot="separator" :class="ui.separator({ class: [props.ui?.separator] })" />
 
-        <tr v-for="footerGroup in tableApi.getFooterGroups()" :key="footerGroup.id" data-slot="tr" :class="ui.tr({ class: [uiProp?.tr] })">
+        <tr v-for="footerGroup in tableApi.getFooterGroups()" :key="footerGroup.id" data-slot="tr" :class="ui.tr({ class: [props.ui?.tr] })">
           <th
             v-for="header in footerGroup.headers"
             :key="header.id"
@@ -674,7 +698,7 @@ defineExpose({
             data-slot="th"
             :class="ui.th({
               class: [
-                uiProp?.th,
+                props.ui?.th,
                 resolveValue(header.column.columnDef.meta?.class?.th, header)
               ],
               pinned: !!header.column.getIsPinned()
@@ -693,7 +717,7 @@ defineExpose({
     </table>
   </DefineTableTemplate>
 
-  <Primitive ref="rootRef" :as="as" v-bind="$attrs" data-slot="root" :class="ui.root({ class: [uiProp?.root, props.class] })">
+  <Primitive ref="rootRef" :as="props.as" data-slot="root" v-bind="$attrs" :class="ui.root({ class: [props.ui?.root, props.class] })">
     <ReuseTableTemplate />
   </Primitive>
 </template>

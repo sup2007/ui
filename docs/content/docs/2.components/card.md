@@ -1,6 +1,10 @@
 ---
 description: Display content in a card with a header, body and footer.
 category: element
+keywords:
+  - panel
+  - box
+  - container
 links:
   - label: GitHub
     icon: i-simple-icons-github
@@ -42,7 +46,7 @@ slots:
 :placeholder{class="h-8"}
 ::
 
-### Title :badge{label="Soon" class="align-text-top"}
+### Title :badge{label="4.7+" class="align-text-top"}
 
 Use the `title` prop to set the title of the Card's header.
 
@@ -64,7 +68,7 @@ slots:
 :placeholder{class="h-32"}
 ::
 
-### Description :badge{label="Soon" class="align-text-top"}
+### Description :badge{label="4.7+" class="align-text-top"}
 
 Use the `description` prop to set the description of the Card's header.
 

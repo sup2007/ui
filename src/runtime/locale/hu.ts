@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Linkek',
+      search: 'Eredmények',
       theme: 'Téma'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Oldalsáv bezárása',
       open: 'Oldalsáv megnyitása'
+    },
+    drawer: {
+      close: 'Bezárás'
     },
     error: {
       clear: 'Vissza a főoldalra'

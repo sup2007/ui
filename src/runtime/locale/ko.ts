@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: '링크',
+      search: '결과',
       theme: '테마'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: '사이드바 닫기',
       open: '사이드바 열기'
+    },
+    drawer: {
+      close: '닫기'
     },
     error: {
       clear: '홈으로 돌아가기'

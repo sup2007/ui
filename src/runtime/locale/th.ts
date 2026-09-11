@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -34,11 +34,6 @@ export default defineLocale<Messages>({
     chatPromptSubmit: {
       label: 'ส่ง'
     },
-    chatReasoning: {
-      thinking: 'กำลังคิด…',
-      thought: 'คิดแล้ว',
-      thoughtFor: 'คิดเป็นเวลา {duration}'
-    },
     colorMode: {
       dark: 'มืด',
       light: 'สว่าง',
@@ -55,6 +50,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'ลิงก์',
+      search: 'ผลลัพธ์',
       theme: 'ธีม'
     },
     contentSearchButton: {
@@ -80,6 +76,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'ปิดแถบด้านข้าง',
       open: 'เปิดแถบด้านข้าง'
+    },
+    drawer: {
+      close: 'ปิด'
     },
     error: {
       clear: 'กลับไปยังหน้าหลัก'
@@ -109,7 +108,7 @@ export default defineLocale<Messages>({
       close: 'ปิด'
     },
     pricingTable: {
-      caption: 'การเปรียบเทียบราคาสินค้า'
+      caption: 'การเปรียบเทียบราคา'
     },
     prose: {
       codeCollapse: {
@@ -129,6 +128,11 @@ export default defineLocale<Messages>({
         copy: 'คัดลอกพรอมต์',
         openIn: 'เปิดใน {name}'
       }
+    },
+    chatReasoning: {
+      thinking: 'กำลังคิด…',
+      thought: 'คิดแล้ว',
+      thoughtFor: 'คิดเป็นเวลา {duration}'
     },
     sidebar: {
       close: 'ปิด',

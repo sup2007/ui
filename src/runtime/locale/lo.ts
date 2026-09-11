@@ -1,4 +1,4 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'ລິ້ງ',
+      search: 'ຜົນໄດ້ຮັບ',
       theme: 'ທີມ'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'ປິດແຖບດ້ານຂ້າງ',
       open: 'ເປີດແຖບດ້ານຂ້າງ'
+    },
+    drawer: {
+      close: 'ປິດ'
     },
     error: {
       clear: 'ກັບໄປໜ້າຫຼັກ'

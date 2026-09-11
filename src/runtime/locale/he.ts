@@ -1,8 +1,8 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
-  name: 'Hebrew',
+  name: 'עברית',
   code: 'he',
   dir: 'rtl',
   messages: {
@@ -56,6 +56,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'קישורים',
+      search: 'תוצאות',
       theme: 'ערכת נושא'
     },
     contentSearchButton: {
@@ -81,6 +82,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'סגור סרגל צד',
       open: 'פתח סרגל צד'
+    },
+    drawer: {
+      close: 'סגור'
     },
     error: {
       clear: 'חזרה לדף הבית'

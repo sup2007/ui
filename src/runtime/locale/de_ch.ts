@@ -1,8 +1,8 @@
-import type { Messages } from '../types'
+import type { Messages } from '../types/locale'
 import { defineLocale } from '../composables/defineLocale'
 
 export default defineLocale<Messages>({
-  name: 'Schweizerdeutsch',
+  name: 'Schweizer Hochdeutsch',
   code: 'de-CH',
   messages: {
     alert: {
@@ -55,6 +55,7 @@ export default defineLocale<Messages>({
     },
     contentSearch: {
       links: 'Links',
+      search: 'Ergebnisse',
       theme: 'Thema'
     },
     contentSearchButton: {
@@ -80,6 +81,9 @@ export default defineLocale<Messages>({
     dashboardSidebarToggle: {
       close: 'Seitenleiste schliessen',
       open: 'Seitenleiste öffnen'
+    },
+    drawer: {
+      close: 'Schliessen'
     },
     error: {
       clear: 'Zurück zur Startseite'
