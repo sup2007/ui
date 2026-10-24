@@ -64,8 +64,9 @@ export interface CheckboxSlots {
 
 <script setup lang="ts" generic="T = boolean">
 import { computed, useAttrs, useId } from 'vue'
-import { Primitive, CheckboxRoot, CheckboxIndicator, Label } from 'reka-ui'
+import { Primitive, CheckboxRoot, CheckboxIndicator, Label, injectCheckboxGroupRootContext } from 'reka-ui'
 import { reactivePick } from '@vueuse/core'
+import { isEqual } from 'ohash/utils'
 import { useAppConfig } from '#imports'
 import { useComponentProps } from '../composables/useComponentProps'
 import { useForwardProps } from '../composables/useForwardProps'
@@ -97,9 +98,29 @@ const size = computed(() => formFieldSize.value ?? props.size)
 
 const disabled = computed(() => formFieldDisabled.value ?? props.disabled)
 
+// Once a CheckboxGroup reaches its `max`, the unchecked checkboxes stay focusable but can't be checked.
+const checkboxGroupContext = injectCheckboxGroupRootContext(null)
+const maxReached = computed(() => {
+  const max = checkboxGroupContext?.max.value
+  if (!checkboxGroupContext || max === null || max === undefined) {
+    return false
+  }
+
+  // Same check as Reka UI, whose `value` prop defaults to `on`.
+  const values = checkboxGroupContext.modelValue.value ?? []
+  const checkboxValue = props.value === undefined ? 'on' : props.value
+  return values.length >= max && !values.some(value => isEqual(value, checkboxValue))
+})
+
 // When the indicator is hidden the checked icon is never visible, so `icon` renders above the
 // label instead. No `appConfig` fallback here, an unset `icon` must render nothing.
 const labelIcon = computed(() => props.indicator === 'hidden' ? props.icon : undefined)
+
+// `list` (and the default, which has no `variant`) renders the label as a `<Label>` tied to the
+// input. Every other variant renders the whole root as the `<Label>`, so the text only needs a
+// generic block wrapper there: a `<p>` cannot contain block-level content, so a slot that put a
+// `<div>` inside it made the browser close the tag early and broke hydration. See #6033.
+const isListVariant = computed(() => !props.variant || props.variant === 'list')
 
 const attrs = useAttrs()
 
@@ -117,7 +138,7 @@ const ui = computed(() => tv({ extend: theme, ...(appConfig.ui?.checkbox || {}) 
   indicator: props.indicator,
   highlight: highlight.value,
   required: props.required,
-  disabled: disabled.value
+  disabled: disabled.value || maxReached.value
 }))
 
 function onUpdate(value: any) {
@@ -131,7 +152,7 @@ function onUpdate(value: any) {
 
 <!-- eslint-disable vue/no-template-shadow -->
 <template>
-  <Primitive :as="(!props.variant || props.variant === 'list') ? props.as : Label" :data-slot="($attrs['data-slot'] as string | undefined) ?? 'root'" :class="ui.root({ class: [props.ui?.root, props.class] })">
+  <Primitive :as="isListVariant ? props.as : Label" :data-slot="($attrs['data-slot'] as string | undefined) ?? 'root'" :class="ui.root({ class: [props.ui?.root, props.class] })">
     <div data-slot="container" :class="ui.container({ class: props.ui?.container })">
       <CheckboxRoot
         :id="id"
@@ -153,7 +174,7 @@ function onUpdate(value: any) {
 
     <div v-if="labelIcon || (props.label || !!slots.label) || (props.description || !!slots.description)" data-slot="wrapper" :class="ui.wrapper({ class: props.ui?.wrapper })">
       <UIcon v-if="labelIcon" :name="labelIcon" data-slot="icon" :class="ui.icon({ class: props.ui?.icon })" />
-      <component :is="(!props.variant || props.variant === 'list') ? Label : 'p'" v-if="props.label || !!slots.label" :for="id" data-slot="label" :class="ui.label({ class: props.ui?.label })">
+      <component :is="isListVariant ? Label : 'div'" v-if="props.label || !!slots.label" :for="isListVariant ? id : undefined" data-slot="label" :class="ui.label({ class: props.ui?.label })">
         <slot name="label" :label="props.label">
           {{ props.label }}
         </slot>

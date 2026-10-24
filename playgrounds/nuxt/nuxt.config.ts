@@ -19,6 +19,16 @@ export default defineNuxtConfig({
     '/docs/components/**': { redirect: { to: '/components/**', statusCode: 301 }, prerender: false }
   },
 
+  future: {
+    compatibilityVersion: 5
+  },
+
+  experimental: {
+    // `@nuxt/content` still imports Nitro helpers from `#imports`, which compat v5
+    // no longer provides. Remove once nuxt/content#3889 is released.
+    nitroAutoImports: true
+  },
+
   compatibilityDate: '2024-07-09',
 
   vite: {
@@ -34,19 +44,6 @@ export default defineNuxtConfig({
         'tailwindcss/colors',
         'vaul-vue'
       ]
-    }
-  },
-
-  typescript: {
-    tsConfig: {
-      compilerOptions: {
-        paths: {
-          // The docs examples imported in `pages/components/form.vue` resolve
-          // `@nuxt/ui` and `zod` from `docs/`, which the isolated CI install can't reach.
-          '@nuxt/ui': ['../node_modules/@nuxt/ui/dist/module.d.mts'],
-          'zod': ['../node_modules/zod']
-        }
-      }
     }
   }
 })

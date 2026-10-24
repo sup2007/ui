@@ -1,5 +1,6 @@
 <script lang="ts">
 import type { VNode } from 'vue'
+import type { ChatStatus } from 'ai'
 import type { AppConfig } from '@nuxt/schema'
 import theme from '#build/ui/chat-prompt'
 import type { TextareaProps, TextareaSlots } from './Textarea.vue'
@@ -32,6 +33,10 @@ export interface ChatPromptProps extends Pick<TextareaProps, 'rows' | 'autofocus
    * @defaultValue true
    */
   submitOnEnter?: boolean
+  /**
+   * The status of the chat. Submitting is ignored while it is `submitted` or `streaming`.
+   */
+  status?: ChatStatus
   error?: Error
   class?: any
   ui?: ChatPrompt['slots'] & TextareaProps['ui']
@@ -97,7 +102,7 @@ const ui = computed(() => tv({ extend: theme, ...(appConfig.ui?.chatPrompt || {}
 const textareaRef = useTemplateRef('textareaRef')
 
 function submit(e?: Event) {
-  if (model.value.trim() === '') {
+  if (model.value.trim() === '' || props.status === 'submitted' || props.status === 'streaming') {
     return
   }
 
@@ -138,7 +143,7 @@ defineExpose({
 </script>
 
 <template>
-  <Primitive :as="props.as" :data-slot="($attrs['data-slot'] as string | undefined) ?? 'root'" :class="ui.root({ class: [props.ui?.root, props.class] })" @submit.prevent="submit">
+  <Primitive :as="props.as" :method="props.as === 'form' ? 'post' : undefined" :data-slot="($attrs['data-slot'] as string | undefined) ?? 'root'" :class="ui.root({ class: [props.ui?.root, props.class] })" @submit.prevent="submit">
     <div v-if="!!slots.header" data-slot="header" :class="ui.header({ class: props.ui?.header })">
       <slot name="header" />
     </div>
